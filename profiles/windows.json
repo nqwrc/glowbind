@@ -1,0 +1,33 @@
+{
+  "id": "windows",
+  "name": "Windows 11",
+  "keybinds": [
+    { "id": "clipboard-history", "action": "Apre la cronologia degli appunti", "keys": [["Win", "V"]], "category": "appunti", "keywords": ["clipboard", "copia incolla"] },
+    { "id": "screenshot-snip", "action": "Cattura una porzione dello schermo con lo Strumento di cattura", "keys": [["Win", "Shift", "S"]], "category": "screenshot", "keywords": ["cattura", "screenshot"] },
+    { "id": "lock", "action": "Blocca il computer", "keys": [["Win", "L"]], "category": "sistema", "keywords": ["blocca schermo"] },
+    { "id": "explorer", "action": "Apre Esplora file", "keys": [["Win", "E"]], "category": "sistema", "keywords": ["file manager", "cartelle"] },
+    { "id": "settings", "action": "Apre le Impostazioni di Windows", "keys": [["Win", "I"]], "category": "sistema" },
+    { "id": "run", "action": "Apre la finestra Esegui", "keys": [["Win", "R"]], "category": "sistema", "keywords": ["esegui comando"] },
+    { "id": "task-view", "action": "Apre la visualizzazione attivita' e i desktop virtuali", "keys": [["Win", "Tab"]], "category": "finestre", "keywords": ["desktop virtuali", "task view"] },
+    { "id": "alt-tab", "action": "Passa tra le finestre aperte", "keys": [["Alt", "Tab"]], "category": "finestre", "keywords": ["cambia finestra"] },
+    { "id": "snap-left", "action": "Ancora la finestra corrente alla meta' sinistra dello schermo", "keys": [["Win", "Left"]], "category": "finestre", "keywords": ["snap", "affianca"] },
+    { "id": "snap-right", "action": "Ancora la finestra corrente alla meta' destra dello schermo", "keys": [["Win", "Right"]], "category": "finestre", "keywords": ["snap", "affianca"] },
+    { "id": "maximize", "action": "Massimizza la finestra corrente", "keys": [["Win", "Up"]], "category": "finestre" },
+    { "id": "minimize", "action": "Minimizza la finestra corrente", "keys": [["Win", "Down"]], "category": "finestre" },
+    { "id": "minimize-all", "action": "Mostra il desktop minimizzando tutte le finestre", "keys": [["Win", "D"]], "category": "finestre", "keywords": ["desktop"] },
+    { "id": "new-desktop", "action": "Crea un nuovo desktop virtuale", "keys": [["Win", "Ctrl", "D"]], "category": "finestre", "keywords": ["desktop virtuale"] },
+    { "id": "next-desktop", "action": "Passa al desktop virtuale successivo", "keys": [["Win", "Ctrl", "Right"]], "category": "finestre" },
+    { "id": "task-manager", "action": "Apre Gestione attivita'", "keys": [["Ctrl", "Shift", "Esc"]], "category": "sistema", "keywords": ["task manager", "processi"] },
+    { "id": "quick-link", "action": "Apre il menu rapido del pulsante Start (menu power user)", "keys": [["Win", "X"]], "category": "sistema" },
+    { "id": "emoji", "action": "Apre il pannello emoji e simboli", "keys": [["Win", "."]], "category": "appunti", "keywords": ["emoji", "simboli"] },
+    { "id": "dictation", "action": "Avvia la digitazione vocale", "keys": [["Win", "H"]], "category": "accessibilita", "keywords": ["dettatura", "voce"] },
+    { "id": "magnifier", "action": "Attiva la lente di ingrandimento", "keys": [["Win", "="]], "category": "accessibilita", "keywords": ["zoom", "ingrandisci"] },
+    { "id": "notifications", "action": "Apre il centro notifiche e il calendario", "keys": [["Win", "N"]], "category": "sistema" },
+    { "id": "quick-settings", "action": "Apre le impostazioni rapide (rete, volume, luminosita')", "keys": [["Win", "A"]], "category": "sistema" },
+    { "id": "widgets", "action": "Apre i widget", "keys": [["Win", "W"]], "category": "sistema" },
+    { "id": "cast", "action": "Proietta lo schermo su un altro display", "keys": [["Win", "K"]], "category": "sistema", "keywords": ["proietta", "secondo schermo"] },
+    { "id": "display-mode", "action": "Cambia la modalita' di visualizzazione multi monitor (duplica, estendi)", "keys": [["Win", "P"]], "category": "sistema", "keywords": ["monitor", "proiettore"] },
+    { "id": "rename", "action": "Rinomina l'elemento selezionato in Esplora file", "keys": [["F2"]], "category": "file" },
+    { "id": "refresh", "action": "Aggiorna la finestra corrente", "keys": [["F5"]], "category": "sistema", "keywords": ["ricarica"] }
+  ]
+}

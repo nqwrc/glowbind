@@ -1,0 +1,24 @@
+{
+  "name": "keybard-emoter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Learn keyboard shortcuts: natural-language search lights up the keys on your RGB keyboard via OpenRGB",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web \"npm:dev -w server\" \"npm:dev -w web\"",
+    "build": "npm run build -w web && npm run build -w server",
+    "start": "node server/dist/index.js",
+    "set-key": "node server/scripts/set-key.mjs",
+    "mock-keyboard": "node server/scripts/mock-keyboard.mjs",
+    "start:mock": "node server/scripts/start-mock-app.mjs",
+    "test": "npm run test -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}
