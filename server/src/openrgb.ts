@@ -63,7 +63,7 @@ export class OpenRGBService {
   private async tryConnect() {
     if (this.connecting) return;
     this.connecting = true;
-    const client = new OpenRGBClient("keybard-emoter", this.port, this.host);
+    const client = new OpenRGBClient("glowbind", this.port, this.host);
     // The SDK re-emits socket errors on the client. Without a listener Node
     // treats them as unhandled and kills the process, so attach one before
     // connecting: closing OpenRGB must not take the app down.

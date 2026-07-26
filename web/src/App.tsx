@@ -62,7 +62,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>keybard-emoter</h1>
+        <h1>glowbind</h1>
         <div className="badges">
           <span className={`badge ${openrgbBadge.tone}`}>{openrgbBadge.text}</span>
           <span className={`badge ${status?.gemini ? "on" : "off"}`}>

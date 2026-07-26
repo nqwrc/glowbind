@@ -12,5 +12,5 @@ if (!key) {
   process.exit(1);
 }
 
-new Entry("keybard-emoter", "gemini-api-key").setPassword(key);
-console.log("Key saved to Windows Credential Manager (keybard-emoter / gemini-api-key).");
+new Entry("glowbind", "gemini-api-key").setPassword(key);
+console.log("Key saved to Windows Credential Manager (glowbind / gemini-api-key).");

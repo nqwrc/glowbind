@@ -93,4 +93,4 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 }
 
 await app.listen({ port: PORT, host: "127.0.0.1" });
-console.log(`keybard-emoter server on http://127.0.0.1:${PORT}`);
+console.log(`glowbind server on http://127.0.0.1:${PORT}`);

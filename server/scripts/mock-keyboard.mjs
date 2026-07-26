@@ -1,5 +1,5 @@
 // A fake OpenRGB SDK server exposing one 87-key RGB keyboard, drawn in the
-// terminal and repainted every time keybard-emoter updates the LEDs.
+// terminal and repainted every time glowbind updates the LEDs.
 // Lets you see the physical-lighting path without owning an RGB keyboard.
 //
 //   npm run mock-keyboard        (terminal 1)

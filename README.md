@@ -1,4 +1,4 @@
-# keybard-emoter
+# glowbind
 
 Learn keyboard shortcuts with your keyboard itself. Type what you want to do in
 natural language ("split the editor in two") and the app lights up the right
