@@ -1,4 +1,5 @@
-// Turns KeyboardEvents into canonical key tokens and checks quiz answers.
+// Turning keyboard events into canonical key tokens, comparing chords, and
+// knowing which chords the browser or the OS will swallow before we see them.
 
 const CODE_TO_TOKEN: Record<string, string> = {
   Backquote: "`", Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]",
@@ -17,40 +18,66 @@ for (let c = 65; c <= 90; c++) {
   CODE_TO_TOKEN[`Key${letter}`] = letter;
 }
 
-const MODIFIER_TOKENS = new Set(["Ctrl", "Shift", "Alt", "Win"]);
+export const MODIFIERS = ["Ctrl", "Shift", "Alt", "Win"] as const;
+const MODIFIER_SET = new Set<string>(MODIFIERS);
 
-export interface PressedStep {
-  mods: Set<string>;
-  key: string | null;
-}
+export const isModifier = (token: string) => MODIFIER_SET.has(token);
 
-/** null when the event is a bare modifier press (not a complete step yet). */
-export function eventToStep(e: KeyboardEvent): PressedStep | null {
+/**
+ * The chord a key press represents, or null while only modifiers are held.
+ * A chord is always "the modifiers being held plus the one real key".
+ */
+export function eventToChord(e: KeyboardEvent): string[] | null {
   if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return null;
-  const mods = new Set<string>();
-  if (e.ctrlKey) mods.add("Ctrl");
-  if (e.shiftKey) mods.add("Shift");
-  if (e.altKey) mods.add("Alt");
-  if (e.metaKey) mods.add("Win");
-  const key = CODE_TO_TOKEN[e.code] ?? null;
-  if (key === null) return null;
-  return { mods, key };
+  const key = CODE_TO_TOKEN[e.code];
+  if (!key) return null;
+  const mods: string[] = [];
+  if (e.ctrlKey) mods.push("Ctrl");
+  if (e.shiftKey) mods.push("Shift");
+  if (e.altKey) mods.push("Alt");
+  if (e.metaKey) mods.push("Win");
+  return [...mods, key];
 }
 
-/** Does a pressed step match the expected chord (e.g. ["Ctrl","Shift","P"])? */
-export function stepMatches(expected: string[], pressed: PressedStep): boolean {
-  const expectedMods = new Set(expected.filter((t) => MODIFIER_TOKENS.has(t)));
-  const expectedKeys = expected.filter((t) => !MODIFIER_TOKENS.has(t));
-  if (expectedKeys.length !== 1) return false;
-  if (expectedKeys[0] !== pressed.key) return false;
-  if (expectedMods.size !== pressed.mods.size) return false;
-  for (const m of expectedMods) if (!pressed.mods.has(m)) return false;
-  return true;
+/** Chords match as sets: modifier order and left/right variants don't matter. */
+export function chordMatches(expected: string[], actual: string[]): boolean {
+  if (expected.length !== actual.length) return false;
+  const wanted = new Set(expected);
+  return actual.every((t) => wanted.has(t));
 }
 
-/** Keybinds the quiz can verify in the browser (the OS swallows Win combos). */
-export function quizzable(keys: string[][]): boolean {
-  return keys.every(
-    (chord) => !chord.includes("Win") && chord.filter((t) => !MODIFIER_TOKENS.has(t)).length === 1,
-  );
+/** The single non-modifier key of a chord, if it is well formed. */
+export function mainKey(chord: string[]): string | null {
+  const keys = chord.filter((t) => !isModifier(t));
+  return keys.length === 1 ? keys[0]! : null;
 }
+
+/**
+ * Chords the page will never receive: the browser or Windows acts on them
+ * first, and preventDefault cannot stop it. Pressing some of these would
+ * close the tab or reload the page mid-challenge, so these questions have to
+ * be answered by clicking the on-screen keyboard instead.
+ */
+export function isReserved(chord: string[]): boolean {
+  const key = mainKey(chord);
+  if (key === null) return true;
+  const has = (m: string) => chord.includes(m);
+
+  if (has("Win")) return true; // the OS owns every Win combination
+  if (has("Alt") && (key === "Tab" || key === "F4")) return true;
+  if (has("Ctrl") && has("Shift") && key === "Esc") return true; // task manager
+  if (key === "F5" || key === "F11" || key === "F12") return true;
+
+  if (has("Ctrl")) {
+    // Tab and window management, plus reload.
+    if (["W", "N", "T", "R", "Tab", "PageUp", "PageDown"].includes(key)) return true;
+    if (/^[0-9]$/.test(key)) return true;
+  }
+  return false;
+}
+
+/** Whether a shortcut can be typed on a physical keyboard inside a browser. */
+export const isTypable = (keys: string[][]) => keys.every((chord) => !isReserved(chord));
+
+export const formatChord = (chord: string[]) => chord.join("+");
+export const formatKeys = (keys: string[][]) => keys.map(formatChord).join("  poi  ");

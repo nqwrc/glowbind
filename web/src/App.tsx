@@ -1,145 +1,92 @@
 import { useEffect, useState } from "react";
-import { api } from "./api";
-import { Keyboard } from "./Keyboard";
-import { Quiz } from "./Quiz";
-import { useLightingState } from "./ws";
-import type { Profile, ProfileSummary, QueryResult, Status } from "./types";
+import { Challenge } from "./Challenge";
+import { Search } from "./Search";
+import { PROFILES } from "./engine/profiles";
+import { detectBridge, type BridgeStatus } from "./engine/bridge";
+import { lighting } from "./engine/lighting";
+import { isTypable } from "./chords";
+import type { Profile } from "./types";
 
-type Mode = "search" | "quiz";
+type Mode = "challenge" | "search";
 
 export default function App() {
-  const [status, setStatus] = useState<Status | null>(null);
-  const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [mode, setMode] = useState<Mode>("search");
-  const [query, setQuery] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<QueryResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const lighting = useLightingState();
+  const [profile, setProfile] = useState<Profile | null>(PROFILES[0] ?? null);
+  const [mode, setMode] = useState<Mode>("challenge");
+  const [bridge, setBridge] = useState<BridgeStatus | null>(null);
 
   useEffect(() => {
-    void api.status().then(setStatus).catch(() => setStatus(null));
-    void api.profiles().then(async (list) => {
-      setProfiles(list);
-      if (list.length > 0) setProfile(await api.profile(list[0].id));
-    });
-    const poll = window.setInterval(
-      () => void api.status().then(setStatus).catch(() => setStatus(null)),
-      10_000,
-    );
-    return () => window.clearInterval(poll);
+    void detectBridge().then(setBridge);
   }, []);
 
-  const selectProfile = async (id: string) => {
-    setResult(null);
-    setProfile(await api.profile(id));
+  const select = (next: Profile) => {
+    if (next.id === profile?.id) return;
+    lighting.clear();
+    setMode("challenge");
+    setProfile(next);
   };
-
-  const submit = async () => {
-    if (!profile || !query.trim() || busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      setResult(await api.query(profile.id, query));
-    } catch {
-      setError("Errore durante la richiesta. Il server e' attivo?");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const highlightedTokens = lighting.active ? (lighting.chords[lighting.step] ?? []) : [];
-
-  // Connected with no keyboard is a distinct state: OpenRGB is running but has
-  // detected no RGB keyboard, so nothing will light up physically.
-  const openrgbBadge = !status?.openrgb
-    ? { tone: "off", text: "OpenRGB non connesso (solo tastiera virtuale)" }
-    : status.keyboards.length === 0
-      ? { tone: "warn", text: "OpenRGB connesso, nessuna tastiera RGB rilevata" }
-      : { tone: "on", text: `OpenRGB: ${status.keyboards.join(", ")}` };
 
   return (
     <div className="app">
-      <header>
-        <h1>glowbind</h1>
-        <div className="badges">
-          <span className={`badge ${openrgbBadge.tone}`}>{openrgbBadge.text}</span>
-          <span className={`badge ${status?.gemini ? "on" : "off"}`}>
-            {status?.gemini ? "AI: Gemini" : "AI non configurata (ricerca fuzzy)"}
-          </span>
+      <aside className="sidebar">
+        <div className="brand">
+          <h1>glowbind</h1>
+          <p>Impara le scorciatoie giocando</p>
         </div>
-      </header>
 
-      <div className="toolbar">
-        <select
-          value={profile?.id ?? ""}
-          onChange={(e) => void selectProfile(e.target.value)}
-          aria-label="profilo"
-        >
-          {profiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} ({p.count})
-            </option>
-          ))}
-        </select>
-        <div className="mode-switch">
-          <button className={mode === "search" ? "sel" : ""} onClick={() => setMode("search")}>
-            Cerca
-          </button>
-          <button className={mode === "quiz" ? "sel" : ""} onClick={() => setMode("quiz")}>
-            Allenamento
-          </button>
-        </div>
-      </div>
+        <nav>
+          <h2>Applicazioni</h2>
+          {PROFILES.map((p) => {
+            const clickOnly = p.keybinds.filter((k) => !isTypable(k.keys)).length;
+            return (
+              <button
+                key={p.id}
+                className={`nav-item${p.id === profile?.id ? " sel" : ""}`}
+                onClick={() => select(p)}
+              >
+                <span className="nav-name">{p.name}</span>
+                <span className="nav-count">
+                  {p.keybinds.length} scorciatoie
+                  {clickOnly > 0 ? ` - ${clickOnly} da cliccare` : ""}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
 
-      {mode === "search" && profile && (
-        <section className="search">
-          <div className="search-bar">
-            <input
-              type="text"
-              value={query}
-              placeholder='Cosa vuoi fare? Es. "dividi l&apos;editor in due"'
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && void submit()}
-            />
-            <button onClick={() => void submit()} disabled={busy}>
-              {busy ? "..." : "Illumina"}
+        <div className="bridge-box">
+          <h2>Modalita'</h2>
+          <div className="mode-switch">
+            <button
+              className={mode === "challenge" ? "sel" : ""}
+              onClick={() => setMode("challenge")}
+            >
+              Sfida
             </button>
-            <button onClick={() => void api.clear()}>Spegni</button>
+            <button className={mode === "search" ? "sel" : ""} onClick={() => setMode("search")}>
+              Cerca
+            </button>
           </div>
-          {error && <p className="quiz-wrong">{error}</p>}
-          {result && (
-            <div className="result">
-              {result.keybind ? (
-                <>
-                  <div className="result-keys">
-                    {result.keybind.keys.map((chord, i) => (
-                      <span key={i} className="chord">
-                        {i > 0 && <span className="then">poi</span>}
-                        {chord.map((t) => (
-                          <kbd key={t}>{t}</kbd>
-                        ))}
-                      </span>
-                    ))}
-                  </div>
-                  <p>{result.explanation}</p>
-                  <p className="muted">
-                    Fonte: {result.source === "gemini" ? "Gemini" : "ricerca locale"}
-                    {" - "}confidenza {(result.confidence * 100).toFixed(0)}%
-                  </p>
-                </>
-              ) : (
-                <p>{result.explanation}</p>
-              )}
-            </div>
+          {bridge && (
+            <span
+              className={`badge ${bridge.openrgb && bridge.keyboards.length > 0 ? "on" : "warn"}`}
+            >
+              {bridge.keyboards.length > 0
+                ? `Tastiera RGB: ${bridge.keyboards.join(", ")}`
+                : "Server locale attivo, nessuna tastiera RGB"}
+            </span>
           )}
-        </section>
-      )}
+        </div>
+      </aside>
 
-      {mode === "quiz" && profile && <Quiz profile={profile} />}
-
-      <Keyboard highlighted={highlightedTokens} />
+      <main className="content">
+        {profile === null ? (
+          <p className="muted">Nessun profilo disponibile.</p>
+        ) : mode === "search" ? (
+          <Search profile={profile} />
+        ) : (
+          <Challenge key={profile.id} profile={profile} />
+        )}
+      </main>
     </div>
   );
 }

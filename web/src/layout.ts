@@ -15,20 +15,20 @@ export const LAYOUT: LayoutKey[][] = [
     k("F1"), k("F2"), k("F3"), k("F4"), gap(0.5),
     k("F5"), k("F6"), k("F7"), k("F8"), gap(0.5),
     k("F9"), k("F10"), k("F11"), k("F12"), gap(0.5),
-    k("PrintScreen", "Stamp"), k("ScrollLock", "Bloc Scorr"), k("Pause", "Pausa"),
+    k("PrintScreen", "Stamp"), k("ScrollLock", "Scorr"), k("Pause", "Pausa"),
   ],
   [
     k("`"), k("1"), k("2"), k("3"), k("4"), k("5"), k("6"), k("7"), k("8"), k("9"), k("0"),
-    k("-"), k("="), k("Backspace", "Backspace", 2), gap(0.5),
-    k("Insert", "Ins"), k("Home"), k("PageUp", "Pag su"),
+    k("-"), k("="), k("Backspace", "Backsp", 2), gap(0.5),
+    k("Insert", "Ins"), k("Home"), k("PageUp", "PgSu"),
   ],
   [
     k("Tab", "Tab", 1.5), k("Q"), k("W"), k("E"), k("R"), k("T"), k("Y"), k("U"), k("I"),
     k("O"), k("P"), k("["), k("]"), k("\\", "\\", 1.5), gap(0.5),
-    k("Delete", "Canc"), k("End", "Fine"), k("PageDown", "Pag giu"),
+    k("Delete", "Canc"), k("End", "Fine"), k("PageDown", "PgGiu"),
   ],
   [
-    k("CapsLock", "Bloc Maiusc", 1.75), k("A"), k("S"), k("D"), k("F"), k("G"), k("H"),
+    k("CapsLock", "Caps", 1.75), k("A"), k("S"), k("D"), k("F"), k("G"), k("H"),
     k("J"), k("K"), k("L"), k(";"), k("'"), k("Enter", "Invio", 2.25), gap(0.5), gap(3),
   ],
   [

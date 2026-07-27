@@ -3,23 +3,33 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
-import fastifyWebsocket from "@fastify/websocket";
 import { loadProfiles } from "./profiles.js";
 import { OpenRGBService } from "./openrgb.js";
-import { LightingController } from "./lighting.js";
 import { resolveQuery, geminiAvailable } from "./resolver.js";
 
+// The companion server. The browser owns the app; this only mirrors the
+// highlighted chord onto a real RGB keyboard and answers natural-language
+// queries with the key kept out of the browser.
+
 const PORT = Number(process.env.PORT ?? 3000);
+// Nothing repaints the keyboard if the page goes away mid-highlight, so give
+// up and restore the original colors after a while.
+const IDLE_RESTORE_MS = 60_000;
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webDist = path.resolve(here, "../../web/dist");
 
 const profiles = await loadProfiles();
 const openrgb = new OpenRGBService();
 openrgb.start();
-const lighting = new LightingController(openrgb);
+
+let idleTimer: NodeJS.Timeout | null = null;
+function armIdleRestore() {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => void openrgb.restore(), IDLE_RESTORE_MS);
+}
 
 const app = Fastify({ logger: false });
-await app.register(fastifyWebsocket);
 if (existsSync(webDist)) {
   await app.register(fastifyStatic, { root: webDist });
 }
@@ -30,15 +40,20 @@ app.get("/api/status", async () => ({
   gemini: geminiAvailable(),
 }));
 
-app.get("/api/profiles", async () =>
-  [...profiles.values()].map((p) => ({ id: p.id, name: p.name, count: p.keybinds.length })),
-);
+app.post("/api/chord", async (req, reply) => {
+  const { tokens } = (req.body ?? {}) as { tokens?: unknown };
+  if (!Array.isArray(tokens) || tokens.some((t) => typeof t !== "string")) {
+    return reply.code(400).send({ error: "tokens deve essere un array di stringhe" });
+  }
+  await openrgb.showChord(tokens as string[]);
+  armIdleRestore();
+  return { ok: true };
+});
 
-app.get("/api/profiles/:id", async (req, reply) => {
-  const { id } = req.params as { id: string };
-  const profile = profiles.get(id);
-  if (!profile) return reply.code(404).send({ error: "profilo non trovato" });
-  return profile;
+app.post("/api/clear", async () => {
+  if (idleTimer) clearTimeout(idleTimer);
+  await openrgb.restore();
+  return { ok: true };
 });
 
 app.post("/api/query", async (req, reply) => {
@@ -48,7 +63,6 @@ app.post("/api/query", async (req, reply) => {
     return reply.code(400).send({ error: "profileId e text sono obbligatori" });
   }
   const resolution = await resolveQuery(profile, text.trim());
-  if (resolution.keybind) lighting.highlight(resolution.keybind);
   return {
     keybind: resolution.keybind,
     source: resolution.source,
@@ -57,35 +71,8 @@ app.post("/api/query", async (req, reply) => {
   };
 });
 
-app.post("/api/highlight", async (req, reply) => {
-  const { profileId, keybindId } = (req.body ?? {}) as {
-    profileId?: string;
-    keybindId?: string;
-  };
-  const keybind = profileId
-    ? profiles.get(profileId)?.keybinds.find((k) => k.id === keybindId)
-    : undefined;
-  if (!keybind) return reply.code(404).send({ error: "keybind non trovato" });
-  lighting.highlight(keybind);
-  return { ok: true };
-});
-
-app.post("/api/clear", async () => {
-  await lighting.clear();
-  return { ok: true };
-});
-
-app.get("/ws", { websocket: true }, (socket) => {
-  socket.send(JSON.stringify({ type: "lighting", state: lighting.getState() }));
-  const unsubscribe = lighting.onChange((state) => {
-    socket.send(JSON.stringify({ type: "lighting", state }));
-  });
-  socket.on("close", unsubscribe);
-});
-
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, async () => {
-    await lighting.clear();
     await openrgb.stop();
     await app.close();
     process.exit(0);
@@ -93,4 +80,4 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 }
 
 await app.listen({ port: PORT, host: "127.0.0.1" });
-console.log(`glowbind server on http://127.0.0.1:${PORT}`);
+console.log(`glowbind bridge on http://127.0.0.1:${PORT}`);

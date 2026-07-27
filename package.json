@@ -16,7 +16,8 @@
     "set-key": "node server/scripts/set-key.mjs",
     "mock-keyboard": "node server/scripts/mock-keyboard.mjs",
     "start:mock": "node server/scripts/start-mock-app.mjs",
-    "test": "npm run test -w server"
+    "test": "npm run test -w server",
+    "preview": "npm run preview -w web"
   },
   "devDependencies": {
     "concurrently": "^10.0.4"

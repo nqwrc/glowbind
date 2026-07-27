@@ -1,67 +1,113 @@
 # glowbind
 
-Learn keyboard shortcuts with your keyboard itself. Type what you want to do in
-natural language ("split the editor in two") and the app lights up the right
-keys on your physical RGB keyboard via [OpenRGB](https://openrgb.org) — and on
-an on-screen virtual keyboard if you don't have one. A training mode quizzes
-you until the shortcuts stick.
+A browser challenge for learning keyboard shortcuts. Pick an app from the left
+menu, glowbind asks what a shortcut does, you answer with the real keys, and it
+scores you at the end and lists what to revise. There is also a search mode:
+describe what you want to do and it lights up the keys.
 
-> The UI is currently in Italian. Shortcut profiles for VS Code and Windows 11
-> are included; adding your own app is a single JSON file.
+It is a plain static site: no install, no account, no API key, nothing to run.
+Optionally, a small local companion lights the answers on a real RGB keyboard
+through [OpenRGB](https://openrgb.org).
 
-## Features
+Bundled profiles: VS Code, IntelliJ IDEA, Google Chrome, Figma, Photoshop,
+Microsoft Excel and Windows 11 — around 250 shortcuts. Adding your own app is a
+single JSON file.
 
-- **Natural-language search** powered by Gemini Flash (free tier), with a
-  local fuzzy-search fallback when no API key is configured — the app never
-  requires the cloud.
-- **Physical key lighting**: the whole board dims and the shortcut keys glow;
-  multi-step chords (`Ctrl+K` then `S`) animate step by step. Previous colors
-  are saved and restored afterwards.
-- **Virtual keyboard** that mirrors the physical one in real time over
-  WebSocket, so it works with any (or no) keyboard.
-- **Training mode**: the app asks "what's the shortcut for X?", you press the
-  real keys, it scores you and reveals the answer on the keyboard when you
-  miss.
-- **Resilient by design**: OpenRGB can be closed and reopened at any time; the
-  app reconnects in the background and degrades to virtual-only.
-- **API key stored safely** in the Windows Credential Manager, never on disk.
+> The UI is in Italian.
 
-## Requirements
+## Playing
 
-- Node.js 20+
-- [OpenRGB](https://openrgb.org) with the SDK server enabled
-  (SDK Server tab, Start Server, default port 6742). Optional: without it the
-  app still works with the virtual keyboard only.
-- A Gemini API key (free tier from [Google AI Studio](https://aistudio.google.com)).
-  Optional: without it the app falls back to local fuzzy search.
+Answer either way, whichever you prefer:
 
-## Setup
+- **Press the shortcut** on your keyboard.
+- **Click the keys** on the on-screen keyboard: modifiers stay held until you
+  click a real key, which submits the chord.
+
+Clicking is not just a convenience. The browser and Windows grab many
+combinations before the page can see them — anything with the Win key, Ctrl+W,
+F5 and friends — and pressing those would reload or close the tab mid-game.
+glowbind detects them, says so, and expects those answers by mouse.
+
+Two wrong attempts reveal the answer and light it up. Scoring is 100 points
+first try, 50 after a mistake, 0 when revealed.
+
+## Running it
 
 ```
 npm install
-npm run set-key     # stores the Gemini API key in Windows Credential Manager
 npm run build
-npm start           # http://127.0.0.1:3000
+npm run preview      # http://127.0.0.1:4173
 ```
 
-Development mode (hot reload, UI on the Vite port):
+## Search mode
+
+Type what you want to do ("rinominare una variabile ovunque") and glowbind
+lights the shortcut, with a couple of alternatives in case it guessed wrong.
+
+Matching runs entirely in your browser: the query is stripped of accents and
+Italian filler words, then scored on word overlap with a light stemmer, with
+fuzzy matching as a tiebreaker for typos. No key, no network, no cost.
+
+For sharper answers you can paste **your own** Google Gemini key (free tier at
+[AI Studio](https://aistudio.google.com)). It is stored in your browser only
+and sent straight to Google. glowbind never ships a key of its own — a key
+embedded in a public site would be readable by anyone.
+
+## Publishing
+
+`npm run build` writes a self-contained site to `web/dist`. Asset paths are
+relative, so it works from any subdirectory — GitHub Pages project sites,
+Netlify, Cloudflare Pages, an S3 bucket. Copy the folder and you are done.
+
+It must be served over http, not opened as a `file://` path: the bundle is an
+ES module and browsers block those on the file protocol.
+
+### GitHub Pages
+
+`.github/workflows/pages.yml` builds and deploys on every push to `main`. It
+runs the test suite first, so a broken profile never ships.
+
+One-time setup: in the repository, **Settings > Pages > Build and deployment**,
+set the source to **GitHub Actions**. The site then lands at
+`https://<user>.github.io/<repo>/`.
+
+## Optional: light a real RGB keyboard
+
+A small local server can mirror each revealed shortcut onto a physical
+keyboard, and adds a natural-language search mode powered by Gemini. The API
+key stays on your machine (Windows Credential Manager), never in the browser,
+which is exactly why this part cannot be part of the public site.
+
+Requirements: [OpenRGB](https://openrgb.org) with its SDK server started
+(SDK Server tab, Start Server), and a free
+[Google AI Studio](https://aistudio.google.com) key for the search mode.
 
 ```
-npm run dev
+npm run set-key      # stores the Gemini key in Windows Credential Manager
+npm run build
+npm start            # http://127.0.0.1:3000 - serves the site and the bridge
 ```
 
-## Configuration
+The page finds the bridge on its own and shows an extra panel in the sidebar.
+Without it, the same page is just the challenge.
 
-Environment variables (all optional):
+Environment variables: `PORT` (default 3000), `OPENRGB_HOST` / `OPENRGB_PORT`
+(default 127.0.0.1:6742), `GEMINI_MODEL` (default `gemini-flash-latest`),
+`GEMINI_API_KEY` (fallback if nothing is in the Credential Manager).
 
-- `PORT` - server port (default 3000)
-- `OPENRGB_HOST` / `OPENRGB_PORT` - OpenRGB SDK server address (default 127.0.0.1:6742)
-- `GEMINI_MODEL` - Gemini model id (default `gemini-flash-latest`)
-- `GEMINI_API_KEY` - fallback if no key is stored in the Credential Manager
+### No RGB keyboard? Use the fake one
+
+A mock keyboard speaks the real OpenRGB protocol and draws itself in the
+terminal, repainting as glowbind lights it.
+
+```
+npm run mock-keyboard    # terminal 1, an 87-key keyboard on port 6799
+npm run start:mock       # terminal 2, the bridge pointed at it
+```
 
 ## Profiles
 
-Keybind sets live in `profiles/*.json`:
+One JSON file per app in `profiles/`, bundled into the site at build time:
 
 ```json
 {
@@ -73,53 +119,15 @@ Keybind sets live in `profiles/*.json`:
       "action": "Does the thing",
       "keys": [["Ctrl", "Shift", "P"]],
       "category": "general",
-      "keywords": ["synonyms", "for fuzzy search"]
+      "keywords": ["synonyms", "for the search mode"]
     }
   ]
 }
 ```
 
-`keys` is a sequence of chords: `[["Ctrl","K"],["Ctrl","S"]]` means
-Ctrl+K followed by Ctrl+S. Valid key tokens are listed in
-`server/src/keymap.ts`. Profiles are validated at startup.
-
-## Trying it without an RGB keyboard
-
-If OpenRGB reports no keyboard (or you have no RGB keyboard at all), a mock one
-is included. It speaks the real OpenRGB SDK protocol and draws itself in the
-terminal, repainting every time the app updates the LEDs.
-
-Terminal 1 - the fake keyboard (listens on port 6799):
-
-```
-npm run mock-keyboard
-```
-
-Terminal 2 - the app, pointed at it instead of real OpenRGB:
-
-```
-npm run start:mock
-```
-
-Then open http://127.0.0.1:3000, search for a shortcut, and watch the keys light
-up in terminal 1. Multi-step chords animate; clearing restores the idle colors.
-
-## Architecture
-
-- `server/` - Fastify + TypeScript. Loads and validates profiles (zod),
-  resolves queries (Gemini with fuzzy fallback via Fuse.js), drives OpenRGB,
-  and pushes lighting state to the UI over WebSocket.
-- `web/` - React + Vite. Virtual TKL keyboard, search UI, quiz mode.
-- `profiles/` - shortcut catalogs, one JSON file per application.
-
-## Notes
-
-- Quiz mode captures keys in the browser, so shortcuts the OS intercepts
-  (anything with the Win key, Ctrl+W, Ctrl+T in some browsers) are excluded
-  or may close the tab.
-- Physical lighting saves the previous colors and restores them when cleared
-  (automatic after 20 s).
-- The server binds to 127.0.0.1 only.
+`keys` is a sequence of chords: `[["Ctrl","K"],["Ctrl","S"]]` means Ctrl+K then
+Ctrl+S. Valid key tokens are listed in `server/src/keymap.ts`, and `npm test`
+fails if a profile uses one that no keyboard could light.
 
 ## Tests
 
@@ -127,6 +135,6 @@ up in terminal 1. Multi-step chords animate; clearing restores the idle colors.
 npm test
 ```
 
-## License
-
-[MIT](LICENSE)
+Covers the token-to-LED mapping, profile validation, and the OpenRGB lighting
+path against an in-process fake keyboard — including that closing OpenRGB
+mid-session does not take the server down.
