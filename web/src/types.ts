@@ -25,13 +25,6 @@ export interface LightingState {
   step: number;
 }
 
-export interface QueryResult {
-  keybind: Keybind | null;
-  source: "gemini" | "fuzzy";
-  confidence: number;
-  explanation: string;
-}
-
 export interface Status {
   openrgb: boolean;
   keyboards: string[];
