@@ -32,8 +32,3 @@ export interface QueryResult {
   explanation: string;
 }
 
-export interface Status {
-  openrgb: boolean;
-  keyboards: string[];
-  gemini: boolean;
-}
