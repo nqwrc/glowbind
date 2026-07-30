@@ -18,13 +18,6 @@ export interface ProfileSummary {
   count: number;
 }
 
-export interface LightingState {
-  active: boolean;
-  keybindId: string | null;
-  chords: string[][];
-  step: number;
-}
-
 export interface Status {
   openrgb: boolean;
   keyboards: string[];
