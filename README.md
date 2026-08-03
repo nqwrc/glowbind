@@ -1,5 +1,7 @@
 > **Featured project.** An interactive web experience for learning keyboard shortcuts, combining product design, structured content, optional RGB-keyboard feedback, and automated tests.
 
+**[Try it live](https://nqwrc.github.io/glowbind/)**
+
 # glowbind
 
 A browser challenge for learning keyboard shortcuts. Pick an app from the left
@@ -136,7 +138,3 @@ fails if a profile uses one that no keyboard could light.
 ```
 npm test
 ```
-
-Covers the token-to-LED mapping, profile validation, and the OpenRGB lighting
-path against an in-process fake keyboard — including that closing OpenRGB
-mid-session does not take the server down.
