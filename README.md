@@ -1,3 +1,5 @@
+> **Featured project.** An interactive web experience for learning keyboard shortcuts, combining product design, structured content, optional RGB-keyboard feedback, and automated tests.
+
 # glowbind
 
 A browser challenge for learning keyboard shortcuts. Pick an app from the left
