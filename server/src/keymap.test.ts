@@ -47,10 +47,21 @@ describe("buildKeymap", () => {
   });
 });
 
+const BUNDLED_PROFILE_NAMES = [
+  "Adobe Photoshop",
+  "Figma",
+  "Google Chrome",
+  "IntelliJ IDEA",
+  "Microsoft Excel",
+  "VS Code",
+  "Windows 11",
+];
+
 describe("profiles", () => {
   it("load, validate and only use known key tokens", async () => {
     const profiles = await loadProfiles();
-    expect(profiles.size).toBeGreaterThanOrEqual(2);
+    const names = Array.from(profiles.values(), (profile) => profile.name).sort();
+    expect(names).toEqual(BUNDLED_PROFILE_NAMES);
     for (const profile of profiles.values()) {
       for (const kb of profile.keybinds) {
         for (const chord of kb.keys) {
