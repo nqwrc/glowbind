@@ -165,6 +165,9 @@ describe("OpenRGBService against a mock OpenRGB server", () => {
   it("detects the keyboard and switches it to Direct mode", async () => {
     const { mock: m, service: s } = await connected();
     expect(s.keyboardNames).toEqual(["Mock RGB Keyboard"]);
+    // updateMode has no reply in the protocol, so the packet can still be in
+    // flight when the service reports connected; wait for the mock to see it.
+    await waitFor(() => m.modeSet);
     expect(m.modeSet).toBe(true);
   });
 
