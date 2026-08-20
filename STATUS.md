@@ -2,12 +2,11 @@
 
 state: active
 remote: github-public
-updated: 2026-08-13
+updated: 2026-08-20
 stale-after-days: 30
 
 ## kpi
-None. It is the candidate for the traction/visibility gate in drafts/open-source-idee, which
-explicitly keeps stars and visibility metrics out of any project's KPI table. Declared
+None. Stars and visibility metrics stay out of KPI tables by maintainer decision. Declared
 deviation from the 1-3 KPI rule.
 
 ## now
@@ -17,7 +16,6 @@ Status type, duplicate QueryResult type); README carries a featured-project over
 live demo link.
 
 ## backlog
-- nothing tracked here; see the repo's open issues. Note: per
-  drafts/open-source-idee/00-roadmap.md, launching this as a traction play is explicitly
-  gated behind applications-sent > 0 in nqwrc.career — not blocked yet as a repo, but not to
-  be worked on as a launch vehicle before that gate opens.
+- nothing tracked here; see the repo's open issues. Launch and traction work (promotion,
+  visibility push, etc.) is deferred per maintainer decision; not blocked as a repo, just not
+  being worked on as a launch vehicle right now.
