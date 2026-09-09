@@ -2,7 +2,7 @@
 
 state: active
 remote: github-public
-updated: 2026-08-20
+updated: 2026-09-09
 stale-after-days: 30
 
 ## kpi
